@@ -50,7 +50,7 @@ def update(drone):
     arr = np.argwhere(mask)
 
     if arr.shape[0] < MIN_PIXELS:
-        roll = 0   # not enough edge to trust -- hold position
+        roll = 0 
     else:
         width = image.shape[1]
         offset = np.mean(arr[:, 1]) - width / 2

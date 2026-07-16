@@ -61,11 +61,7 @@ def intrinsic_matrix(fx, fy, cx, cy):
     """
     ##################################
     #### START PUT CODE HERE #########
-    K = np.array([
-        [fx,  0, cx],
-        [ 0, fy, cy],
-        [ 0,  0,  1]
-    ], dtype=float)
+    K = np.array([[fx,  0, cx],[ 0, fy, cy],[ 0,  0,  1]], dtype=float)
 
     ###### END PUT CODE HERE #########
     ##################################
@@ -112,7 +108,7 @@ def apply_radial_distortion(x, y, k1, k2):
 
     ###### END PUT CODE HERE #########
     ##################################
-    return (x * factor, y * factor)
+    return (x*factor, y*factor)
 
 
 # ── Self-check ──────────────────────────────────────────────────────────────────────

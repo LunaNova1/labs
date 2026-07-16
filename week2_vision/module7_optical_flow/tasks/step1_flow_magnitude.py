@@ -74,9 +74,7 @@ def update(drone):
 
         else:
             new_pts, status, err = cv2.calcOpticalFlowPyrLK(_prev_gray, gray, _prev_pts, None, **LK_PARAMS)
-            print(f"new_pts.shape={new_pts.shape}, status.shape={status.shape}, _prev_pts.shape={_prev_pts.shape}")
             status = status.ravel()
-            print(f"after ravel: status.shape={status.shape}")
             good_new = new_pts[status == 1].reshape(-1, 2)
             good_old = _prev_pts[status == 1].reshape(-1, 2)
             displacements = np.linalg.norm(good_new - good_old, axis=1)

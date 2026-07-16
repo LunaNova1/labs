@@ -41,7 +41,7 @@ def update(drone):
     global _timer, _done
     if _done:
         return True
-    drone.flight.stop()   # hover in place
+    drone.flight.stop() 
     ##################################
     #### START PUT CODE HERE #########
 

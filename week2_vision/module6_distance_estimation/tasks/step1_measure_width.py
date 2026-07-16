@@ -40,7 +40,7 @@ def update(drone):
     global _timer, _done
     if _done:
         return True
-    drone.flight.stop()   # hover in place
+    drone.flight.stop() 
     ##################################
     #### START PUT CODE HERE #########
     image = drone.camera.get_color_image()
@@ -50,7 +50,7 @@ def update(drone):
     else:
         x, y, w, h = cv2.boundingRect(gate)
         print(f"width - {w}")
-        
+
     _timer += drone.get_delta_time()
     if _timer >= HOVER_TIME:
         _done = True
