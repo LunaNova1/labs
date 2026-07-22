@@ -21,7 +21,18 @@ def euler_to_rot(roll, pitch, yaw):
     """
     ##################################
     #### START PUT CODE HERE #########
-    R = np.eye(3)
+    rz =  np.array([ [np.cos(yaw), -np.sin(yaw), 0],
+            [np.sin(yaw), np.cos(yaw), 0],
+             [0, 0, 1]])
+    ry = np.array([ [np.cos(pitch), 0, np.sin(pitch)],
+            [0, 1, 0],
+             [-np.sin(pitch), 0, np.cos(pitch)]])
+    rx = np.array([  [1, 0, 0],
+            [0, np.cos(roll), -np.sin(roll)],
+            [0, np.sin(roll), np.cos(roll)]
+            ])
+    R = rz@ry
+    R = R@rx
     ###### END PUT CODE HERE #########
     ##################################
     return R
@@ -35,13 +46,37 @@ def rot_to_quat(R):
     """
     ##################################
     #### START PUT CODE HERE #########
-    w = 1.0
-    x = 0.0
-    y = 0.0
-    z = 0.0
+    if np.trace(R) > 0:
+        S = 2* np.sqrt(np.trace(R)+1)
+        w = 1/4 * S
+        x = (R[2][1] - R[1][2])/S
+        y = (R[0][2] - R[2][0])/S
+        z = (R[1][0] - R[0][1])/S
+    else:
+        if R[1][1] > R[0][0] and R[1][1] > R[2][2]:
+            S = 2* np.sqrt(1+R[1][1] -R[0][0]-R[2][2])
+            w = (R[0][2] - R[2][0])/S
+            x = (R[1][0] + R[0][1])/S
+            y = 1/4 * S
+            z = (R[2][1] + R[1][2])/S
+        elif R[0][0] > R[1][1] and R[0][0] > R[2][2]:
+            S = 2* np.sqrt(1+R[0][0] -R[1][1]-R[2][2])
+            z = (R[0][2] + R[2][0])/S
+            y = (R[1][0] + R[0][1])/S
+            x = 1/4 * S
+            w = (R[2][1] - R[1][2])/S
+        else:
+            S = 2* np.sqrt(1+R[2][2] -R[1][1]-R[0][0])
+            x = (R[0][2] + R[2][0])/S
+            w = (R[1][0] - R[0][1])/S
+            z = 1/4 * S
+            y = (R[2][1] + R[1][2])/S
+    
+            
+
     ###### END PUT CODE HERE #########
     ##################################
-    return np.array([x, y, z, w])
+    return np.array([x, y, z, w]) / np.linalg.norm(np.array([x, y, z, w]))
 
 
 # ── Part 0: static frame transform (ENU <-> NED) ────────────────────────────────────
@@ -53,7 +88,7 @@ def enu_to_ned(vec):
     e, n, u = vec
     ##################################
     #### START PUT CODE HERE #########
-    result = np.array([0.0, 0.0, 0.0])  # YOUR CODE HERE
+    result = np.array([n, e, -u])  # YOUR CODE HERE
     ###### END PUT CODE HERE #########
     ##################################
     return result
@@ -67,8 +102,9 @@ def thrust_allocation(mass, k_f, total_thrust):
     """
     ##################################
     #### START PUT CODE HERE #########
-    per = 0.0    # YOUR CODE HERE
-    omega = 0.0  # YOUR CODE HERE
+    per = total_thrust / 4.0
+    omega = np.sqrt(per / k_f)
+
     ###### END PUT CODE HERE #########
     ##################################
     return omega, per
@@ -78,7 +114,8 @@ def hover_thrust(mass, g=9.81):
     """Total thrust (N) needed to hover (see README, Key terms)."""
     ##################################
     #### START PUT CODE HERE #########
-    return 0.0  # YOUR CODE HERE
+    thrust = mass*g
+    return mass*g  # YOUR CODE HERE
     ###### END PUT CODE HERE #########
     ##################################
 

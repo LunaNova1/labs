@@ -10,6 +10,7 @@ Heights are measured above the ground sampled at launch.
 import drone_core
 import drone_utils as uav_utils
 
+
 # -- Course setup: makes the shared `neo_lab` helper importable.
 #    You don't need to read or change this block. --
 import os as _os, sys as _sys
@@ -36,6 +37,13 @@ def reset():
     _hold = 0.0
     _done = False
 
+def p_control(y_err, kp):
+    """Return the proportional control command for the given error and gain (see README, Key terms)."""
+    ##################################
+    #### START PUT CODE HERE #########
+    return y_err * kp
+    ###### END PUT CODE HERE #########
+    ##################################
 
 def update(drone):
     global _hold, _done
@@ -43,6 +51,18 @@ def update(drone):
         return True
     ##################################
     #### START PUT CODE HERE #########
+
+    y_err = TARGET_HEIGHT - neo_lab.height(drone)
+    throttle = uav_utils.clamp(p_control(y_err, KP), -THROTTLE_LIMIT, THROTTLE_LIMIT)
+    
+    drone.flight.send_pcmd(0, 0, 0, throttle)
+    if abs(y_err) < TOL:
+        _hold += 1
+    else:
+        _hold = 0
+    
+    if _hold >= HOLD_TIME:
+        _done = True
 
     # Use proportional control on the height error to hold TARGET_HEIGHT.
     # neo_lab.height(drone) reports meters above the launch ground. Throttle is a

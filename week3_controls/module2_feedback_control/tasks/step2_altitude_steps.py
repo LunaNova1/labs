@@ -9,6 +9,15 @@ Chase a sequence of target heights (a step response).
 import drone_core
 import drone_utils as uav_utils
 
+
+def p_control(y_err, kp):
+    """Return the proportional control command for the given error and gain (see README, Key terms)."""
+    ##################################
+    #### START PUT CODE HERE #########
+    return y_err * kp
+    ###### END PUT CODE HERE #########
+    ##################################
+
 # -- Course setup: makes the shared `neo_lab` helper importable.
 #    You don't need to read or change this block. --
 import os as _os, sys as _sys
@@ -47,7 +56,32 @@ def update(drone):
 
     # GOAL: hold each height in SETPOINTS in turn, moving to the next once you have
     # stayed within TOL of the current one for HOLD_TIME. Finish after the last.
-    #
+
+    y_err = SETPOINTS[_index] - neo_lab.height(drone)
+
+    throttle = uav_utils.clamp(
+        p_control(y_err, KP),
+        -THROTTLE_LIMIT,
+        THROTTLE_LIMIT
+    )
+
+    drone.flight.send_pcmd(0, 0, 0, throttle)
+
+    if abs(y_err) < TOL:
+        _hold += 1
+    else:
+        _hold = 0
+
+    if _hold >= HOLD_TIME:
+        print(f"done {_index}")
+        _hold += drone.get_delta_time()
+
+        if _index == len(SETPOINTS) - 1:
+            _done = True
+        else:
+            _index += 1
+
+
     # This is your Step 1 proportional controller with one change: the target is
     # SETPOINTS[_index] instead of a fixed value, and you advance _index after holding
     # each one. Stop and set _done once _index runs past the end of the list.
