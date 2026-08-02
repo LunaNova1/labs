@@ -4,12 +4,13 @@ GNU General Public License v3.0
 
 Week 4 · Module 1 — Step 2: Go To a Waypoint
 Fly to a target point given as (right, up, forward) meters from the start. This is
-your first controller that drives three axes at once: roll for right, pitch for
-forward, throttle for up.
+your first controller that drives three axes at once, commanding a body velocity on
+each: right, forward, and up.
 """
 
 import drone_core
 import drone_utils as uav_utils
+import numpy as np
 
 # -- Course setup: makes the shared `neo_lab` helper importable.
 #    You don't need to read or change this block. --
@@ -24,13 +25,8 @@ import neo_lab
 # -- Constants --------------------------------------------------------------
 TARGET_RIGHT = 2.0
 TARGET_FWD = 4.0
-TARGET_HEIGHT = 3.0
-KP_POS = 0.15
-KD_POS = 0.5            # brake with velocity so you don't overshoot
-ALT_KP = 0.12
-ROLL_LIMIT = 0.25
-PITCH_LIMIT = 0.25
-THROTTLE_LIMIT = 0.5
+TARGET_HEIGHT = 1.0
+KP_POS = 0.6           # target speed (m/s) per meter of position error
 POS_TOL = 0.5          # meters from target counted as arrived
 SETTLE_SPEED = 0.25    # must slow below this to finish
 HOLD_TIME = 1.5
@@ -56,16 +52,35 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
+    dt = drone.get_delta_time()
+    vel = drone.physics.get_linear_velocity()
+    speed = np.linalg.norm(vel)
+    _x += vel[0]*dt
+    _z += vel[2]*dt
+
+    err_x = TARGET_FWD - _x
+    err_z = TARGET_RIGHT - _z
+    neo_lab.send_velocity(drone, KP_POS*err_z, neo_lab.altitude_hold_velocity(drone, TARGET_HEIGHT), KP_POS* err_x)
+
+    if abs(err_x) <= POS_TOL and abs(err_z) <= POS_TOL and speed <= SETTLE_SPEED:
+        _hold += dt
+        if _hold >= HOLD_TIME:
+            _done = True
+    else:
+        _hold = 0
+
+
     # GOAL: fly to (TARGET_RIGHT, TARGET_HEIGHT, TARGET_FWD) and hold there.
     #
     # Tools: drone.physics.get_linear_velocity() -> (vx, vy, vz); drone.get_delta_time();
-    #        neo_lab.height(drone); uav_utils.clamp(...); drone.flight.send_pcmd(...).
+    #        neo_lab.altitude_hold_velocity(drone, TARGET_HEIGHT);
+    #        neo_lab.send_velocity(drone, v_right, v_up, v_forward).
     #
-    # Track right/forward position by integrating vx, vz like Step 1. Drive each
-    # horizontal axis with a PD controller (gain KP_POS on position error and KD_POS on
-    # velocity, which brakes you): roll for the right error, pitch for the forward error.
-    # Hold height with a proportional term (ALT_KP). Clamp each to its limit. Finish when
-    # both horizontal errors are under POS_TOL and speed is under SETTLE_SPEED for HOLD_TIME.
+    # Track right/forward position by integrating vx, vz like Step 1. Turn each position
+    # error into a target speed (gain KP_POS); send_velocity turns it into motion and applies
+    # the real-drone speed cap for you, so you don't clamp it yourself. Hold height with
+    # neo_lab.altitude_hold_velocity. Command all three with send_velocity. Finish when both
+    # horizontal errors are under POS_TOL and speed is under SETTLE_SPEED for HOLD_TIME.
 
     ###### END PUT CODE HERE #########
     ##################################
@@ -74,7 +89,7 @@ def update(drone):
 
 if __name__ == "__main__":
     _drone = drone_core.create_drone()
-    _launcher = neo_lab.Launcher(3.0)
+    _launcher = neo_lab.Launcher()
 
     def start():
         _launcher.reset()
