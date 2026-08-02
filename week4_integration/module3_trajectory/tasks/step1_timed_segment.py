@@ -24,7 +24,7 @@ import neo_lab
 # -- Constants --------------------------------------------------------------
 GOAL_RIGHT = 2.0
 GOAL_FWD = 6.0
-TARGET_HEIGHT = 3.0
+TARGET_HEIGHT = 1.0
 DURATION = 5.0        # seconds to fly the segment
 KP_POS = 0.6          # position error -> velocity (1/s): how hard to close a position gap
 ALT_KP = 0.6          # altitude error -> vertical velocity (1/s)
@@ -75,6 +75,12 @@ def update(drone):
     pos_r, pos_f, vel_r, vel_f = trajectory(_t)
     ##################################
     #### START PUT CODE HERE #########
+    v_right   = vel_r + KP_POS * (pos_r - _x)
+    v_forward = vel_f + KP_POS * (pos_f - _z)
+    v_up = ALT_KP * (TARGET_HEIGHT - neo_lab.height(drone))
+    neo_lab.send_velocity(drone, v_right, v_up, v_forward)
+
+
 
     # GOAL: keep the drone on the moving target (pos_r, pos_f) by commanding a VELOCITY.
     #
