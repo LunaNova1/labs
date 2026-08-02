@@ -46,6 +46,20 @@ def update(drone):
         return True
     ##################################
     #### START PUT CODE HERE #########
+    vel = drone.physics.get_linear_velocity()
+    dt = drone.get_delta_time()
+
+    _timer += dt
+    _x += vel[2]*dt
+    _z += vel[0]*dt
+
+    drone.flight.send_pcmd(PROBE_PITCH, PROBE_ROLL, 0, 0)
+
+    if _timer >= REPORT_TIME:
+        drone.flight.stop()
+        print(f" Position: x = {_x}, y = {neo_lab.height(drone)}, z = {_z}")
+        _done = True
+
 
     # Dead reckoning: read drone.physics.get_linear_velocity() (vx=right, vy=up,
     # vz=forward) and integrate the horizontal components into (_x, _z) each frame. Nudge
@@ -59,7 +73,7 @@ def update(drone):
 
 if __name__ == "__main__":
     _drone = drone_core.create_drone()
-    _launcher = neo_lab.Launcher(3.0)
+    _launcher = neo_lab.Launcher()
 
     def start():
         _launcher.reset()
