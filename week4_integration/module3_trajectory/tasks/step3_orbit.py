@@ -29,7 +29,7 @@ CENTER_FWD = 2.0      # start (0,0) sits on the circle, at its near edge
 RADIUS = 2.0
 PERIOD = 6.0          # seconds per revolution at full speed
 REVOLUTIONS = 2
-TARGET_HEIGHT = 3.0
+TARGET_HEIGHT = 1.0
 KP_POS = 0.6          # position error -> velocity (1/s)
 ALT_KP = 0.6          # altitude error -> vertical velocity (1/s)
 
@@ -98,6 +98,13 @@ def update(drone):
     pos_r, pos_f, vel_r, vel_f = trajectory(_t)
     ##################################
     #### START PUT CODE HERE #########
+
+    v_right   = vel_r + KP_POS * (pos_r - _x)
+    v_forward = vel_f + KP_POS * (pos_f - _z)
+    v_up      = ALT_KP * (TARGET_HEIGHT - neo_lab.height(drone))
+    neo_lab.send_velocity(drone, v_right, v_up, v_forward)
+
+
 
     # GOAL: hold the circle from trajectory() -- constant distance RADIUS from the center.
     #
